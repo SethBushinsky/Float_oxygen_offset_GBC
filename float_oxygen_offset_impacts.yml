@@ -12,7 +12,9 @@ dependencies:
   - cartopy 
   - gsw=3.4.0 
   - jupyter 
+  - requests
   - tqdm
   - pip
   - pip:
     - PyCO2SYS==1.8.1 
+    - matlabengine==9.13.9 # this is the version for matlab R2022b. May not work - can also try going to "/[matlabroot]\extern\engines\python" and running "python setup.py install"

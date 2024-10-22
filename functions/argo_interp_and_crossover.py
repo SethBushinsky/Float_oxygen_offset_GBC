@@ -6,7 +6,7 @@ from scipy import interpolate
 import glob, os
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
-import pandas as pd
+# import pandas as pd
 
 def argo_interp_profiles(argo_path, LIAR_path, argo_path_interpolated, argo_path_derived, argo_file, qc_data_fields, bgc_data_fields, p_interp, \
                           derived_list, interpolation_list, adjustment):
