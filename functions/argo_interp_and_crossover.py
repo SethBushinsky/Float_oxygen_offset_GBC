@@ -33,6 +33,8 @@ def argo_interp_profiles(argo_path, LIAR_path, argo_path_interpolated, argo_path
             #argo_n[q].where(np.logical_and(qc_val<3.,qc_val>4.))
             argo_n[q].values[np.logical_or(qc_val==4,qc_val==3)]=np.nan
             argo_n[q].values[np.logical_or(qc_val==0,qc_val==9)]=np.nan
+            argo_n[q].values[np.logical_or(qc_val==5,qc_val==6)]=np.nan
+            argo_n[q].values[np.logical_or(qc_val==7,qc_val==8)]=np.nan
 
             #check for any Inf values not included in QC flag and set to NaN
             argo_n[q].values[np.isinf(argo_n[q]).values] = np.nan
