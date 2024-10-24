@@ -18,10 +18,10 @@
 import numpy as np
 import glob, os
 import pandas as pd
-import xarray as xr
-import gsw
+# import xarray as xr
+# import gsw
 import ftplib
-import getpass
+# import getpass
 
 
 def get_glodap(save_dir, year):

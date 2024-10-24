@@ -2,6 +2,7 @@ import xarray as xr
 import numpy as np
 import functions.carbon_utils as carbon_utils
 import PyCO2SYS as pyco2
+import warnings 
 
 # float_wmo_list = glodap_offsets_p.index.values
 # MeasIDVec = [1, 7, 3, 6]
@@ -22,7 +23,9 @@ def calc_derived_2_pH_no3_impacts(LIPHR_path, MeasIDVec_LIR, MeasIDVec_ESPER, De
 
     print(str(wmo_n) + ' started')
     
-    argo_derived_n = xr.load_dataset(argo_path_derived+ str(wmo_n) + '_derived.nc')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="invalid value encountered in cast")
+        argo_derived_n = xr.load_dataset(argo_path_derived+ str(wmo_n) + '_derived.nc')
 
     nprof = argo_derived_n.LATITUDE.shape[0]
     if nprof==1: # if there is only one profile, probably don't want to trust any offset
@@ -33,7 +36,9 @@ def calc_derived_2_pH_no3_impacts(LIPHR_path, MeasIDVec_LIR, MeasIDVec_ESPER, De
         return
     
     # load interpolated file
-    argo_interp_n = xr.load_dataset(argo_path_interpolated + str(wmo_n) + '_interpolated.nc')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="invalid value encountered in cast")
+        argo_interp_n = xr.load_dataset(argo_path_interpolated + str(wmo_n) + '_interpolated.nc')
 
     # initialize coordinate and measurement arrays
     Coordinates_all = np.empty([nprof, 3],dtype=float)
@@ -227,12 +232,17 @@ def calc_derived_2_pH_no3_impacts(LIPHR_path, MeasIDVec_LIR, MeasIDVec_ESPER, De
         argo_derived_n['NITRATE_ADJUSTED_wo_O2'] = \
             argo_derived_n.NITRATE_ADJUSTED + np.nanmean(no3_no_o2_no_nan - orig_no3)
 
-    argo_derived_n.to_netcdf(argo_path_derived+ str(wmo_n) + '_derived_2.nc')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="invalid value encountered in cast")
+        argo_derived_n.to_netcdf(argo_path_derived+ str(wmo_n) + '_derived_2.nc')
     print(str(wmo_n)+ ' finished')
 
 def calc_derived_3_pCO2_impacts(argo_path_derived, file):
     print('Starting: ' + file) 
-    argo_n = xr.load_dataset(argo_path_derived + file)
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="invalid value encountered in cast")
+        argo_n = xr.load_dataset(argo_path_derived + file)
     var_list = list(argo_n.data_vars)
     wmo_n = argo_n['wmo']
 
@@ -359,4 +369,6 @@ def calc_derived_3_pCO2_impacts(argo_path_derived, file):
     argo_n['pCO2_pH_wo_O2_ESPER_TALK_orig'] = (['N_PROF','N_LEVELS'],results['pCO2'])  
     argo_n['DIC_pH_wo_O2_ESPER_TALK_orig'] = (['N_PROF','N_LEVELS'],results['dic'])  
 
-    argo_n.to_netcdf(argo_path_derived+ str(wmo_n.values) + '_derived_3.nc')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="invalid value encountered in cast")
+        argo_n.to_netcdf(argo_path_derived+ str(wmo_n.values) + '_derived_3.nc')

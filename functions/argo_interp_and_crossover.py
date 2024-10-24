@@ -6,14 +6,17 @@ from scipy import interpolate
 import glob, os
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
+import warnings
 # import pandas as pd
 
 def argo_interp_profiles(argo_path, LIAR_path, argo_path_interpolated, argo_path_derived, argo_file, qc_data_fields, bgc_data_fields, p_interp, \
                           derived_list, interpolation_list, adjustment):
     print('Processing float file '+ argo_file)
-    argo_n = xr.load_dataset(argo_path+argo_file)
-    argo_n = argo_n.set_coords(('PRES_ADJUSTED','LATITUDE','LONGITUDE','JULD'))
+    with warnings.catch_warnings(): # seems to be an issue with xarray reading in the JULD_LOCATION values for some floats, doesn't seem to be impacting anything so I am suppressing these warnings
+        warnings.simplefilter("ignore")
+        argo_n = xr.load_dataset(argo_path+argo_file)
 
+    argo_n = argo_n.set_coords(('PRES_ADJUSTED','LATITUDE','LONGITUDE','JULD'))
     wmo_n = argo_n.PLATFORM_NUMBER.values.astype(int)[0]
     # wmo_list.append(wmo_n)
 
@@ -38,7 +41,6 @@ def argo_interp_profiles(argo_path, LIAR_path, argo_path_interpolated, argo_path
 
             #check for any Inf values not included in QC flag and set to NaN
             argo_n[q].values[np.isinf(argo_n[q]).values] = np.nan
-        
     # check for interpolated profile positions (under ice) and set all BGC data to nan
     qc_val = argo_n['POSITION_QC'].values.astype('float')
     for b in bgc_data_fields:
@@ -46,6 +48,24 @@ def argo_interp_profiles(argo_path, LIAR_path, argo_path_interpolated, argo_path
             naninds = np.argwhere(qc_val==8)[:,0]
             argo_n[b][naninds,:] = np.nan
     
+    # interpolate temperature and salinity profile to fill in gaps that sometimes line up with pH measurements:
+    for p in range(0, len(argo_n.N_PROF)):
+        press_p = argo_n['PRES_ADJUSTED'][p,:]
+        temp_p = argo_n['TEMP_ADJUSTED'][p,:]
+        sal_p = argo_n['PSAL_ADJUSTED'][p,:]
+
+        press_no_temp_nans = press_p[np.logical_and(~np.isnan(temp_p), ~np.isnan(press_p))]
+        temp_no_temp_nans = temp_p[np.logical_and(~np.isnan(temp_p), ~np.isnan(press_p))]
+
+        press_no_sal_nans = press_p[np.logical_and(~np.isnan(sal_p), ~np.isnan(press_p))]
+        sal_no_sal_nans = sal_p[np.logical_and(~np.isnan(sal_p), ~np.isnan(press_p))]
+
+        temp_interp_p = np.interp(press_p, press_no_temp_nans, temp_no_temp_nans)
+        sal_interp_p = np.interp(press_p, press_no_sal_nans, sal_no_sal_nans)
+
+        argo_n['TEMP_ADJUSTED'][p,:] = temp_interp_p
+        argo_n['PSAL_ADJUSTED'][p,:] = sal_interp_p
+
     #Finding and removing all non-delayed mode data
         # sometimes parameters are missing from profiles - 
         # need to loop through all profiles and check which parameters are present
@@ -54,26 +74,24 @@ def argo_interp_profiles(argo_path, LIAR_path, argo_path_interpolated, argo_path
     for idx in range(len(parameter_array)):
         prof_parameters = parameter_array[idx]
         # print(prof_parameters)
-
         # loop through each paramter in the profile 
         for var in prof_parameters:
             var_str = var.strip()
             if len(var_str)==0: # only proceed if the variable exists 
                 continue
-            var_ind = [idx for idx, s in enumerate(prof_parameters) if s.strip()== var_str]
-            # print(var_ind)
 
+            var_ind = [idx for idx, s in enumerate(prof_parameters) if s.strip()== var_str]
+           
             # get parameter data mode values for that profile / variable
             var_data_mode = argo_n.PARAMETER_DATA_MODE[idx,var_ind].values
-            # print(var_data_mode)
-
+            
             decoded_arr = np.array([elem.decode() if isinstance(elem, bytes) else np.nan for elem in var_data_mode.flatten()])
             # print(decoded_arr)
             result = np.where(decoded_arr == 'D', False, True) # true whereever mode is not delayed
             # print(result)
+
             if result:
                 argo_n[var_str +'_ADJUSTED'][idx,:] = np.nan
-
     # we are currently processing floats that have no valid biogeochemical data. 
     #Should check to see if data in key 
     #original bgc parameters (O2, NO3, pH) is valid and skip the rest if not
@@ -91,7 +109,6 @@ def argo_interp_profiles(argo_path, LIAR_path, argo_path_interpolated, argo_path
     argo_n.PDENS[:] = np.nan
     argo_n['spice'] = (['N_PROF','N_LEVELS'],np.empty(argo_n.PRES_ADJUSTED.shape)) #nprof x nlevel
     argo_n.spice[:] = np.nan
-
     #initialise interpolated dataset for float
     nan_interp = np.empty((nprof_n,p_interp.shape[0]))
     nan_interp[:] = np.nan
@@ -376,9 +393,10 @@ def argo_interp_profiles(argo_path, LIAR_path, argo_path_interpolated, argo_path
     for var in derived_list:
         if var in argo_n.keys():
             argo_n_derived[var] = (['N_PROF','N_LEVELS'],argo_n[var].values)
-    argo_n_derived.to_netcdf(argo_path_derived+str(wmo_n)+'_derived.nc')
-
-    argo_interp_n.to_netcdf(argo_path_interpolated+str(wmo_n)+'_interpolated.nc')
+    with warnings.catch_warnings(): # seems to be an issue with xarray reading in the JULD_LOCATION values for some floats, doesn't seem to be impacting anything so I am suppressing these warnings
+        warnings.simplefilter("ignore")
+        argo_n_derived.to_netcdf(argo_path_derived+str(wmo_n)+'_derived.nc')
+        argo_interp_n.to_netcdf(argo_path_interpolated+str(wmo_n)+'_interpolated.nc')
 
 def glodap_crossover_offsets(argo_path_interpolated, offset_dir, glodap_file_offsets_dir, argo_file, dist, delta_dens, \
                                 delta_spice, delta_press, gdap_p, p_interp, plot_profile, var_list_plot, \
@@ -388,7 +406,9 @@ def glodap_crossover_offsets(argo_path_interpolated, offset_dir, glodap_file_off
     print('Starting crossover for '+ wmo)
 
     try:
-        argo_interp_n = xr.open_dataset(argo_path_interpolated + wmo + '_interpolated.nc')
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            argo_interp_n = xr.open_dataset(argo_path_interpolated + wmo + '_interpolated.nc')
     except:
         print('File ' + wmo + '_interpolated.nc' + ' not found:')
         return
@@ -812,6 +832,8 @@ def glodap_crossover_offsets(argo_path_interpolated, offset_dir, glodap_file_off
     # delete file if it exists already in case 
     if os.path.exists(glodap_file_offsets_dir+glodap_offset_filename):
         os.remove(glodap_file_offsets_dir+glodap_offset_filename)
-    glodap_offsets.to_netcdf(glodap_file_offsets_dir+glodap_offset_filename)
+    with warnings.catch_warnings(): # seems to be an issue with xarray reading in the JULD_LOCATION values for some floats, doesn't seem to be impacting anything so I am suppressing these warnings
+        warnings.simplefilter("ignore")
+        glodap_offsets.to_netcdf(glodap_file_offsets_dir+glodap_offset_filename)
     glodap_offsets.close()
 
