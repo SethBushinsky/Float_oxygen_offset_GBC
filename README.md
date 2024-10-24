@@ -15,36 +15,38 @@ Authors: Seth M. Bushinsky<sup>1</sup>, Zachary Nachod<sup>1</sup>, Andrea J. Fa
 
 ## Download float data:
 ### 01_float_download_sprof_meta.py
-1. Saves:
+Calls:
+     - float_data_processing.py
+Saves:
      - argo_synthetic_profile_index.txt
      - Sprof, meta files
 ## Load glodap, float data, perform derived calculations, interpolate, find and save crossovers
 ### 02_float_bgc_offsets_w_glodap.ipynb
-1. Calls:
+Calls:
   - carbon_utils.py
   - float_data_processing.py
   - argo_interp_and_crossover.py
-2. Saves:
+Saves:
   - GLODAP data file
   - Derived files
   - Interpolated files
   - Glodap crossovers (output directory)
 ## Calculate mean and trimmed (outliers removed) glodap crossovers. 
 ### 03_crossover_calculations_statistics.ipynb
-1. Calls:
+Calls:
   - pressure_level_glodap_mean.py
   - Plot_offsets_crossover_plot_only.py
   - outlier_filter_ESD_test.py
-3. Saves:
+Saves:
   - Individual netcdf files for each pressure level
   - Glodap crossover plots for each file / pressure level
   - Plots of offsets vs. pressure with different criteria 
 ## Figures for the manuscript
 ### 03_analysis_plotting.ipynb
-1. Loads:
+Loads:
   - Netcdf files with all mean glodap crossovers
-2. Calls:
+Calls:
   - carbon_utils.py
   - pH_NO3_DIC_pCO2_impact_calcs
-3. Saves:
+Saves:
   - all plots for manuscript
