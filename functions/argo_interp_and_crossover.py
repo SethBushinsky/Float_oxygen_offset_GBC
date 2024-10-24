@@ -47,25 +47,7 @@ def argo_interp_profiles(argo_path, LIAR_path, argo_path_interpolated, argo_path
         if b in argo_n.keys() and np.any(qc_val==8):
             naninds = np.argwhere(qc_val==8)[:,0]
             argo_n[b][naninds,:] = np.nan
-    
-    # interpolate temperature and salinity profile to fill in gaps that sometimes line up with pH measurements:
-    for p in range(0, len(argo_n.N_PROF)):
-        press_p = argo_n['PRES_ADJUSTED'][p,:]
-        temp_p = argo_n['TEMP_ADJUSTED'][p,:]
-        sal_p = argo_n['PSAL_ADJUSTED'][p,:]
-
-        press_no_temp_nans = press_p[np.logical_and(~np.isnan(temp_p), ~np.isnan(press_p))]
-        temp_no_temp_nans = temp_p[np.logical_and(~np.isnan(temp_p), ~np.isnan(press_p))]
-
-        press_no_sal_nans = press_p[np.logical_and(~np.isnan(sal_p), ~np.isnan(press_p))]
-        sal_no_sal_nans = sal_p[np.logical_and(~np.isnan(sal_p), ~np.isnan(press_p))]
-
-        temp_interp_p = np.interp(press_p, press_no_temp_nans, temp_no_temp_nans)
-        sal_interp_p = np.interp(press_p, press_no_sal_nans, sal_no_sal_nans)
-
-        argo_n['TEMP_ADJUSTED'][p,:] = temp_interp_p
-        argo_n['PSAL_ADJUSTED'][p,:] = sal_interp_p
-
+        
     #Finding and removing all non-delayed mode data
         # sometimes parameters are missing from profiles - 
         # need to loop through all profiles and check which parameters are present
@@ -105,6 +87,24 @@ def argo_interp_profiles(argo_path, LIAR_path, argo_path_interpolated, argo_path
         print(argo_file + ' has no valid BGC data')
         return
     
+    # interpolate temperature and salinity profile to fill in gaps that sometimes line up with pH measurements:
+    for p in range(0, len(argo_n.N_PROF)):
+        press_p = argo_n['PRES_ADJUSTED'][p,:]
+        temp_p = argo_n['TEMP_ADJUSTED'][p,:]
+        sal_p = argo_n['PSAL_ADJUSTED'][p,:]
+
+        press_no_temp_nans = press_p[np.logical_and(~np.isnan(temp_p), ~np.isnan(press_p))]
+        temp_no_temp_nans = temp_p[np.logical_and(~np.isnan(temp_p), ~np.isnan(press_p))]
+
+        press_no_sal_nans = press_p[np.logical_and(~np.isnan(sal_p), ~np.isnan(press_p))]
+        sal_no_sal_nans = sal_p[np.logical_and(~np.isnan(sal_p), ~np.isnan(press_p))]
+
+        temp_interp_p = np.interp(press_p, press_no_temp_nans, temp_no_temp_nans)
+        sal_interp_p = np.interp(press_p, press_no_sal_nans, sal_no_sal_nans)
+
+        argo_n['TEMP_ADJUSTED'][p,:] = temp_interp_p
+        argo_n['PSAL_ADJUSTED'][p,:] = sal_interp_p
+
     argo_n['PDENS'] = (['N_PROF','N_LEVELS'],np.empty(argo_n.PRES_ADJUSTED.shape)) #nprof x nlevel
     argo_n.PDENS[:] = np.nan
     argo_n['spice'] = (['N_PROF','N_LEVELS'],np.empty(argo_n.PRES_ADJUSTED.shape)) #nprof x nlevel
