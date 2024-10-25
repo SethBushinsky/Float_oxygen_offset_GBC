@@ -42,7 +42,7 @@ Saves:
   - Glodap crossover plots for each file / pressure level
   - Plots of offsets vs. pressure with different criteria 
 ## Figures for the manuscript
-### 03_analysis_plotting.ipynb
+### 04_analysis_plotting.ipynb
 Loads:
   - Netcdf files with all mean glodap crossovers
 Calls:

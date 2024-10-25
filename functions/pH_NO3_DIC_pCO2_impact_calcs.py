@@ -255,9 +255,9 @@ def calc_derived_3_pCO2_impacts(argo_path_derived, file):
 
     if 'NITRATE_ADJUSTED' in argo_n.keys():
             SI = argo_n.NITRATE_ADJUSTED*2.5
-            SI.where(~np.isnan(SI), 0)
+            SI = SI.where(~np.isnan(SI), 0)
             PO4 = argo_n.NITRATE_ADJUSTED/16
-            PO4.where(~np.isnan(PO4),0)
+            PO4 = PO4.where(~np.isnan(PO4),0)
     else:
             SI = np.zeros((argo_n.PH_IN_SITU_TOTAL_ADJUSTED.shape))
             PO4 = np.zeros((argo_n.PH_IN_SITU_TOTAL_ADJUSTED.shape))

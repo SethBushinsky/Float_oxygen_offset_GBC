@@ -95,9 +95,13 @@ def argo_interp_profiles(argo_path, LIAR_path, argo_path_interpolated, argo_path
 
         press_no_temp_nans = press_p[np.logical_and(~np.isnan(temp_p), ~np.isnan(press_p))]
         temp_no_temp_nans = temp_p[np.logical_and(~np.isnan(temp_p), ~np.isnan(press_p))]
-
+        if len(temp_no_temp_nans)==0:
+            continue
+        
         press_no_sal_nans = press_p[np.logical_and(~np.isnan(sal_p), ~np.isnan(press_p))]
         sal_no_sal_nans = sal_p[np.logical_and(~np.isnan(sal_p), ~np.isnan(press_p))]
+        if len(sal_no_sal_nans)==0:
+            continue
 
         temp_interp_p = np.interp(press_p, press_no_temp_nans, temp_no_temp_nans)
         sal_interp_p = np.interp(press_p, press_no_sal_nans, sal_no_sal_nans)
@@ -152,9 +156,9 @@ def argo_interp_profiles(argo_path, LIAR_path, argo_path_interpolated, argo_path
         #if nitrate, then use redfield for Si and PO4?, otherwise set to 0    
         if 'NITRATE_ADJUSTED' in argo_n.keys():
             SI = argo_n.NITRATE_ADJUSTED*2.5
-            SI.where(~np.isnan(SI), 0)
+            SI = SI.where(~np.isnan(SI), 0)
             PO4 = argo_n.NITRATE_ADJUSTED/16
-            PO4.where(~np.isnan(PO4),0)
+            PO4 = PO4.where(~np.isnan(PO4),0)
             Coordinates = np.stack((lons_rep.flatten(), 
                             lats_rep.flatten(), 
                             argo_n.PRES_ADJUSTED.values.flatten()),
@@ -190,7 +194,7 @@ def argo_interp_profiles(argo_path, LIAR_path, argo_path_interpolated, argo_path
                                 np.reshape(np.asarray(results),argo_n.PH_IN_SITU_TOTAL_ADJUSTED.shape))
 
 
-        # Keep DIC bc I might want it for crossover comparison
+        # Keep DIC bc I want it for crossover comparison
         ##### Calculate float pH at 25C, DIC and apply bias corr
         results = pyco2.sys(
                 par1=argo_n.TALK_LIAR, 
@@ -398,6 +402,12 @@ def argo_interp_profiles(argo_path, LIAR_path, argo_path_interpolated, argo_path
         argo_n_derived.to_netcdf(argo_path_derived+str(wmo_n)+'_derived.nc')
         argo_interp_n.to_netcdf(argo_path_interpolated+str(wmo_n)+'_interpolated.nc')
 
+
+
+
+
+
+
 def glodap_crossover_offsets(argo_path_interpolated, offset_dir, glodap_file_offsets_dir, argo_file, dist, delta_dens, \
                                 delta_spice, delta_press, gdap_p, p_interp, plot_profile, var_list_plot, \
                                 p_compare_min, p_compare_max):
@@ -415,8 +425,8 @@ def glodap_crossover_offsets(argo_path_interpolated, offset_dir, glodap_file_off
     #number of profiles
     nprof = argo_interp_n.LATITUDE.shape[0]
 
-    p_interp_min = p_interp[0]
-    p_interp_max = p_interp[-1]
+    # p_interp_min = p_interp[0]
+    # p_interp_max = p_interp[-1]
     #initiate offset list
     #number of additional rows for saving metadata items
     num_meta_items = 11
