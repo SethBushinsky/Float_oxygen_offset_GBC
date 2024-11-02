@@ -8,7 +8,7 @@ from scipy import interpolate
 import scipy.stats as stats
 import gsw
 from datetime import datetime
-
+import warnings
 
 # will want to pass individual float files for plotting, so that they can be distributed to parallel cores
 def plot_glodap_crossovers(individual_plot_dir, mean_level_offsets, g, pressure_level_min_max, float_age_bins):
@@ -186,7 +186,7 @@ def plot_glodap_crossovers(individual_plot_dir, mean_level_offsets, g, pressure_
     axn.plot(time_binned_offset[:, 0], time_binned_offset[:, 1],'k-s',label='float', linewidth=2)
     axn.set_title('Offsets vs. float time only with time-binned means overlaid (black squares)', fontsize=label_size)
     plt.ylabel(r'$\Delta$O$_{2,off}$  ($\mu$mol kg$^{-1})$', fontsize=label_size)
-    plt.tight_layout()
+    # plt.tight_layout()
 
     hist_col_index = 13
 
@@ -233,7 +233,7 @@ def plot_glodap_crossovers(individual_plot_dir, mean_level_offsets, g, pressure_
 
             t_stat_trim, p_value_trim = stats.ttest_1samp(a=g_plot_trim, popmean=0, nan_policy='omit') ############
 
-            CI_99 = stats.norm.interval(alpha=0.99, 
+            CI_99 = stats.norm.interval(confidence=0.99, 
                         loc=np.nanmean(g_plot_trim[~np.isnan(g_plot_trim)].values), 
                         scale = stats.sem(g_plot_trim[~np.isnan(g_plot_trim)].values))
 
@@ -424,7 +424,9 @@ def plot_glodap_crossovers(individual_plot_dir, mean_level_offsets, g, pressure_
         # print('Ready to save: ' + str(g.main_float_wmo.values[0]))
         plt.ylabel(r'$\theta$', fontsize=label_size)
         plt.xlabel('S', fontsize=label_size)
-    plt.tight_layout()
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="tight_layout not applied: number of columns")
+        plt.tight_layout()
 
     plt.savefig(individual_plot_dir + str(g.main_float_wmo.values[0])+'_v_glodap_v3.png')
     plt.close()
