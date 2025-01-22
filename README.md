@@ -10,7 +10,7 @@ Authors: Seth M. Bushinsky<sup>1</sup>, Zachary Nachod<sup>1</sup>, Andrea J. Fa
 <sup>4</sup> Monterey Bay Aquarium Research Institute, Moss Landing, CA, USA
 
 
-[![DOI](https://zenodo.org/badge/656396759.svg)](https://zenodo.org/doi/10.5281/zenodo.10866941)
+[![DOI](https://zenodo.org/badge/876941521.svg)](https://doi.org/10.5281/zenodo.14722093)
 
 
 ## Download float data:
