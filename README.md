@@ -9,9 +9,7 @@ Authors: Seth M. Bushinsky<sup>1</sup>, Zachary Nachod<sup>1</sup>, Andrea J. Fa
 <sup>3</sup>University of South Florida, St. Petersburg, FL, USA
 <sup>4</sup> Monterey Bay Aquarium Research Institute, Moss Landing, CA, USA
 
-
-[![DOI](https://zenodo.org/badge/876941521.svg)](https://doi.org/10.5281/zenodo.14722093)
-
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14722094.svg)](https://doi.org/10.5281/zenodo.14722094)
 
 ## Download float data:
 ### 01_float_download_sprof_meta.py
